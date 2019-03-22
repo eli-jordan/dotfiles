@@ -12,6 +12,6 @@ zplug "zsh-users/zaw", ignore:"zaw-launcher.zsh", at:"c8e6e2a"
 zplug "bhilburn/powerlevel9k", as:theme, at:"v0.6.7"
 
 DOTFILES_ZSH="$HOME/dotfiles/zsh"
-zplug "$DOTFILES_ZSH", from:local, use:"*.zsh"
+zplug "$DOTFILES_ZSH", from:local, use:"**/*.zsh"
 
 zplug load
