@@ -46,5 +46,5 @@ zstyle ':zaw:git-files' default zaw-callback-append-to-buffer # set default acti
 zstyle ':zaw:git-files' alt zaw-callback-edit-file # set the alt action for git-files
 
 
-bindkey '^@' zaw          # launch zaw with Ctrl+Space
-bindkey '^r' zaw-history  # launch zaw-history with Ctrl+R 
+#bindkey '^@' zaw          # launch zaw with Ctrl+Space
+#bindkey '^r' zaw-history  # launch zaw-history with Ctrl+R 
