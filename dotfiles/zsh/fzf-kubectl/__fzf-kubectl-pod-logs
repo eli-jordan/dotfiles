@@ -1,0 +1,35 @@
+#!/usr/bin/env zsh
+
+act() {
+	local action="$1"
+	local namespace="$2"
+	local pod="$3"
+	local container="$4"
+
+	echo "act :: namespace=$namespace action=$action pod=$pod"
+
+	if [[ "$action" == "tail" ]]; then
+		kubectl "$namespace" logs -f "$pod" -c "$container"
+	elif [[ "$action" == "fzf" ]]; then
+		kubectl "$namespace" logs "$pod" -c "$container" | fzf --height='100%'
+	elif [[ "$action" == "bat" ]]; then
+		kubectl "$namespace" logs "$pod" -c "$container" | bat --paging=always
+    fi
+}
+
+main() {
+	local namespace="$1"
+	local action="$2"
+	local pod="$3"
+
+	containers=($(kubectl $namespace get pod $pod --output=jsonpath='{.spec.containers[*].name}'))
+
+	if [[ ${#containers[@]} == 1 ]]; then
+		act "$action" "$namespace" "$pod" "${containers[0]}"
+	else
+		local selected=$(echo ${containers[*]} | tr ' ' '\n' | fzf --header='Select a container:')
+		act "$action" "$namespace" "$pod" "$selected"
+	fi
+}
+
+main $@

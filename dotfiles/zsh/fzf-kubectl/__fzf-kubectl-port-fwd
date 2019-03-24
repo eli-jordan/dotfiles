@@ -1,0 +1,15 @@
+#!/usr/bin/env zsh
+
+NAMESPACE="$1"
+POD="$2"
+
+MESSAGE=$(cat <<-END
+
+Starting a port-forward for pod $POD
+
+Enter the port expression (e.g. 8080:8080):
+END
+)
+
+vared -p "$MESSAGE" -c port
+kubectl "$NAMESPACE" port-forward "$POD" "$port"

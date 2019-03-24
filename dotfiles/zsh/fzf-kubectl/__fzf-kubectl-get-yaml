@@ -1,0 +1,7 @@
+#!/usr/bin/env zsh
+
+NAMESPACE="$1"
+WORKLOAD="$2"
+NAME="$3"
+
+kubectl "$NAMESPACE" get "$WORKLOAD" "$NAME" -o yaml | bat --paging=always --language=yaml
