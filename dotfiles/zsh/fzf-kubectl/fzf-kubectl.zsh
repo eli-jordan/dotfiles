@@ -1,9 +1,11 @@
 
 ##
-# Usage: kube-findpods [-n=my-ns|--namespace=my-ns|-a|--all-namespaces] [pod query]
-#   (-n|--name) specify the namespace to look for pods in (defaults to "default")
-#   (-a|--all-namespaces) look in all namespaces
-#   (pod query) the initial query passed to fzf
+# Usage: kube [workload] [-n=my-ns|--namespace=my-ns|-a|--all-namespaces] [query]
+#   
+#   workload            -  the type of kubernetes object yo are interested in (e.g. pod)
+#   -n|--name           - specify the namespace to look for pods in (defaults to "default")
+#   -a|--all-namespaces - look in all namespaces
+#   query               - the initial query passed to fzf
 ##
 
 # TODO: -a/--all-namespaces doesn't work, because it selects the wrong field to lookup the object
