@@ -1,15 +1,22 @@
 #!/usr/bin/env zsh
 
 NAMESPACE="$1"
-POD="$2"
+SELECTED_LINE="$2"
+
+if [[ "$NAMESPACE" == "all" ]]; then
+	NAMESPACE=$(echo "$SELECTED_LINE" | awk '{ print $1 }')
+	NAME=$(echo "$SELECTED_LINE" | awk '{ print $2 }')
+else 
+	NAME=$(echo "$SELECTED_LINE" | awk '{ print $1 }')
+fi
 
 MESSAGE=$(cat <<-END
 
-Starting a port-forward for pod $POD
+Starting a port-forward for pod $NAME
 
 Enter the port expression (e.g. 8080:8080):
 END
 )
 
-vared -p "$MESSAGE" -c port
-kubectl "$NAMESPACE" port-forward "$POD" "$port"
+vared -p "$MESSAGE" -c PORT
+kubectl --namespace="$NAMESPACE" port-forward "$NAME" "$PORT"

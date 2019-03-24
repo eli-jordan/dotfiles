@@ -1,35 +1,33 @@
 #!/usr/bin/env zsh
 
+NAMESPACE="$1"
+ACTION="$2"
+SELECTED_LINE="$3"
+
 act() {
-	local action="$1"
-	local namespace="$2"
-	local pod="$3"
-	local container="$4"
-
-	echo "act :: namespace=$namespace action=$action pod=$pod"
-
-	if [[ "$action" == "tail" ]]; then
-		kubectl "$namespace" logs -f "$pod" -c "$container"
-	elif [[ "$action" == "fzf" ]]; then
-		kubectl "$namespace" logs "$pod" -c "$container" | fzf --height='100%'
-	elif [[ "$action" == "bat" ]]; then
-		kubectl "$namespace" logs "$pod" -c "$container" | bat --paging=always
+	local container="$1"
+	if [[ "$ACTION" == "tail" ]]; then
+		kubectl --namespace="$NAMESPACE" logs -f "$NAME" -c "$container"
+	elif [[ "$ACTION" == "fzf" ]]; then
+		kubectl --namespace="$NAMESPACE" logs "$NAME" -c "$container" | fzf --height='100%'
+	elif [[ "$ACTION" == "bat" ]]; then
+		kubectl --namespace="$NAMESPACE" logs "$NAME" -c "$container" | bat --paging=always
     fi
 }
 
-main() {
-	local namespace="$1"
-	local action="$2"
-	local pod="$3"
+if [[ "$NAMESPACE" == "all" ]]; then
+	NAMESPACE=$(echo "$SELECTED_LINE" | awk '{ print $1 }')
+	NAME=$(echo "$SELECTED_LINE" | awk '{ print $2 }')
+else 
+	NAME=$(echo "$SELECTED_LINE" | awk '{ print $1 }')
+fi
 
-	containers=($(kubectl $namespace get pod $pod --output=jsonpath='{.spec.containers[*].name}'))
+CONTAINERS=($(kubectl --namespace=$NAMESPACE get pod $NAME --output=jsonpath='{.spec.containers[*].name}'))
 
-	if [[ ${#containers[@]} == 1 ]]; then
-		act "$action" "$namespace" "$pod" "${containers[0]}"
-	else
-		local selected=$(echo ${containers[*]} | tr ' ' '\n' | fzf --header='Select a container:')
-		act "$action" "$namespace" "$pod" "$selected"
-	fi
-}
+if [[ ${#CONTAINERS[*]} == 1 ]]; then
+	act "${CONTAINERS[1]}"
+else
+	SELECTED=$(echo ${CONTAINERS[*]} | tr ' ' '\n' | fzf --header='Select a container:')
+	act "$SELECTED"
+fi
 
-main $@

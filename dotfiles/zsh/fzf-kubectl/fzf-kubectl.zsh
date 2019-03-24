@@ -51,21 +51,18 @@ __fzf-kubectl::kube-workload-selector() {
     local workload="$1"
     shift
 
-    local namespace pod_query namespaceOpt
+    local namespace pod_query
     IFS="|" && __fzf-kubectl::parse-find-pod-opts $@ | read namespace pod_query
     IFS=" "
 
+    # If no namespace was set then, set it using the current kube context
     if [[ -z "$namespace" ]]; then
         local cur_ctx=$(kubectl config current-context)
         local ns=$(kubectl config get-contexts $cur_ctx --no-headers | awk '{ print $5 }')
         namespace="$ns"
     fi
 
-    if [[ "$namespace" == "all" ]]; then
-        namespaceOpt="--all-namespaces"
-    else
-        namespaceOpt="--namespace=$namespace"
-    fi
+
 
     normalise_workload_name() {
         case "$1" in
@@ -101,17 +98,17 @@ __fzf-kubectl::kube-workload-selector() {
     local describe_bind=(
         'ctrl-d:execute('
            '__fzf-kubectl-describe' 
-           "$namespaceOpt" 
+           "$namespace" 
            "$workload" 
-           '$(echo {} | awk "{ print \$1 }")'
+           '{}'
         ')'
     )
     local get_yaml_bind=(
         'enter:execute('
            '__fzf-kubectl-get-yaml' 
-           "$namespaceOpt" 
+           "$namespace" 
            "$workload" 
-           '$(echo {} | awk "{ print \$1 }")'
+           '{}'
         ')'
     )
     local accept_bind=(
@@ -120,24 +117,24 @@ __fzf-kubectl::kube-workload-selector() {
     local tail_bind=(
         'ctrl-t:execute('
            '__fzf-kubectl-pod-logs'
-           "$namespaceOpt" 
+           "$namespace" 
            'tail'
-           '$(echo {} | awk "{ print \$1 }")'
+           '{}'
         ')'
     )
     local logs_bind=(
         'ctrl-l:execute('
            '__fzf-kubectl-pod-logs'
-           "$namespaceOpt" 
+           "$namespace" 
            'bat'
-           '$(echo {} | awk "{ print \$1 }")'
+           '{}'
         ')'
     )
     local port_fwd_bind=(
         'ctrl-p:execute('
            '__fzf-kubectl-port-fwd'
-           "$namespaceOpt" 
-           '$(echo {} | awk "{ print \$1 }")'
+           "$namespace" 
+           '{}'
         ')'
     )
         
@@ -179,6 +176,15 @@ __fzf-kubectl::kube-workload-selector() {
     #   * 'enter' - get the resource as yaml
     start_selector() {
         local bind=$(selector_bind_actions)
+
+        local namespaceOpt
+        if [[ "$namespace" == "all" ]]; then
+            namespaceOpt="--all-namespaces"
+        else
+            namespaceOpt="--namespace=$namespace"
+        fi
+
+        echo "bind=$bind"
         kubectl get "$workload" "$namespaceOpt" | \
             fzf --bind="$bind" \
                 --header="type: ${workload}s namespace: $namespace" \

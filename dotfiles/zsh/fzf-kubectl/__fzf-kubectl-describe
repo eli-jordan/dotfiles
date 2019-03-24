@@ -2,6 +2,14 @@
 
 NAMESPACE="$1"
 WORKLOAD="$2"
-NAME="$3"
+SELECTED_LINE="$3"
 
-kubectl "$NAMESPACE" describe "$WORKLOAD" "$NAME" | bat --paging=always
+if [[ "$NAMESPACE" == "all" ]]; then
+	NAMESPACE=$(echo "$SELECTED_LINE" | awk '{ print $1 }')
+	NAME=$(echo "$SELECTED_LINE" | awk '{ print $2 }')
+else 
+	NAME=$(echo "$SELECTED_LINE" | awk '{ print $1 }')
+fi
+
+kubectl --namespace="$NAMESPACE" describe "$WORKLOAD" "$NAME" | bat --paging=always
+
