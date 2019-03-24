@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+# Bootstrap script for use with YADM (Yet Another Dotfiles Manager) 
+# Ref: https://github.com/TheLocehiliosan/yadm
+
+install_homebrew() {
+	/usr/bin/ruby -e \
+	  "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"	
+}
+
+
+homebrew_packages() {
+	local packages=(
+		bat
+		exa
+		fzf
+		jq
+		kubectx
+		kubernetes-cli
+		sbt
+		scala
+		tree
+		zsh
+		zplug
+	)
+
+	for p in "${packages[*]}"; do
+		brew install "$p"
+	done
+}
+
+homebrew_casks() {
+	brew tap caskroom/fonts
+	brew cask install font-meslo-nerd-font
+}
+
+homebrew_postinstall() {
+	zplug install
+	$(brew --prefix)/opt/fzf/install
+}
+
+install_homebrew
+homebrew_packages
+homebrew_casks
+homebrew_postinstall
