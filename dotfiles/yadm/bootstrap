@@ -32,6 +32,7 @@ homebrew_packages() {
 homebrew_casks() {
 	brew tap caskroom/fonts
 	brew cask install font-meslo-nerd-font
+	brew cask install karabiner-elements
 }
 
 homebrew_postinstall() {

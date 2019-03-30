@@ -7,13 +7,16 @@ SELECTED_LINE="$3"
 act() {
 	local container="$1"
 	if [[ "$ACTION" == "tail" ]]; then
-		kubectl --namespace="$NAMESPACE" logs -f "$NAME" -c "$container"
+		local command=$(echo kubectl --namespace="$NAMESPACE" logs -f "$NAME" -c "$container")
+		__fzf-kubectl-run-command-in-new-tab "$command"
 	elif [[ "$ACTION" == "fzf" ]]; then
 		kubectl --namespace="$NAMESPACE" logs "$NAME" -c "$container" | fzf --height='100%'
 	elif [[ "$ACTION" == "bat" ]]; then
 		kubectl --namespace="$NAMESPACE" logs "$NAME" -c "$container" | bat --paging=always
     fi
 }
+
+
 
 if [[ "$NAMESPACE" == "all" ]]; then
 	NAMESPACE=$(echo "$SELECTED_LINE" | awk '{ print $1 }')

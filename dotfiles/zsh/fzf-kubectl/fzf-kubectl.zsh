@@ -1,14 +1,15 @@
 
 ##
-# Usage: kube [workload] [-n=my-ns|--namespace=my-ns|-a|--all-namespaces] [query]
+# fzf-kubectl is an interactive command line tool to interact with kubernetes.
+#
+# Usage: kube [workload-type-query] [-n=my-ns|--namespace=my-ns|-a|--all-namespaces] [query]
 #   
-#   workload            -  the type of kubernetes object yo are interested in (e.g. pod)
+#   workload-type-query -  the type of kubernetes object yo are interested in (e.g. pod)
 #   -n|--name           - specify the namespace to look for pods in (defaults to "default")
 #   -a|--all-namespaces - look in all namespaces
 #   query               - the initial query passed to fzf
 ##
 
-# TODO: -a/--all-namespaces doesn't work, because it selects the wrong field to lookup the object
 # TODO: make keybinding configurable
 
 __fzf_kubectl_workloads=(
@@ -16,44 +17,39 @@ __fzf_kubectl_workloads=(
     namespace
     pod 
     deployment 
+    secret
     service 
     configmap 
-    secret 
     clusterrole 
     clusterrolebinding
 )
 
 kube() {
-    if [[ ${#@} == 0 ]]; then
-        local workload=$(echo ${__fzf_kubectl_workloads[*]} | tr ' ' '\n' | fzf)
-        __fzf-kubectl::dispatch-workload "$workload"
-    else
-        local workload="$1"
-        shift
-        __fzf-kubectl::dispatch-workload "$workload" $@
-    fi 
-}
+    local namespace workload_type_query workload_query
+    local args=$(__fzf-kubectl::parse-find-workload-opts $@)
 
-__fzf-kubectl::dispatch-workload() {
+    IFS="|"; echo "$args" | read namespace workload_type_query workload_query; IFS=" ";
+
+    local workload=$(echo ${__fzf_kubectl_workloads[*]} \
+       | tr ' ' '\n' \
+       | fzf -1 -q "$workload_type_query")
+
     case "$workload" in
-        context|ctx)
+        context)
         kubectx;;
 
-        namespace|ns)
+        namespace)
         kubens;;
 
         *)
-        __fzf-kubectl::kube-workload-selector $@
+        __fzf-kubectl::kube-workload-selector "$workload" "$namespace" "$workload_query"
     esac
 }
 
 __fzf-kubectl::kube-workload-selector() {
     local workload="$1"
-    shift
-
-    local namespace pod_query
-    IFS="|" && __fzf-kubectl::parse-find-pod-opts $@ | read namespace pod_query
-    IFS=" "
+    local namespace="$2"
+    local query="$3"
 
     # If no namespace was set then, set it using the current kube context
     if [[ -z "$namespace" ]]; then
@@ -61,39 +57,6 @@ __fzf-kubectl::kube-workload-selector() {
         local ns=$(kubectl config get-contexts $cur_ctx --no-headers | awk '{ print $5 }')
         namespace="$ns"
     fi
-
-
-
-    normalise_workload_name() {
-        case "$1" in
-            pod|pods)
-            echo "pod";;
-            
-            deployment|deployments|deploy|deploys)
-            echo "deployment";;
-
-            service|services|svc|svcs)
-            echo "service";;
-
-            configmap|configmaps|cm|cms)
-            echo "configmap";;
-
-            secret|secrets)
-            echo "secret";;
-
-            clusterrole|clusterroles)
-            echo "clusterrole";;
-
-            clusterrolebinding|clusterrolebinding)
-            echo "clusterrolebinding";;
-
-            *)
-            echo "Unrecognised workload type $workload"
-            exit 1
-        esac
-    }
-
-    workload="$(normalise_workload_name $workload)"
 
     local describe_bind=(
         'ctrl-d:execute('
@@ -106,6 +69,14 @@ __fzf-kubectl::kube-workload-selector() {
     local get_yaml_bind=(
         'enter:execute('
            '__fzf-kubectl-get-yaml' 
+           "$namespace" 
+           "$workload" 
+           '{}'
+        ')'
+    )
+    local edit_bind=(
+        'ctrl-e:execute('
+           '__fzf-kubectl-edit' 
            "$namespace" 
            "$workload" 
            '{}'
@@ -132,34 +103,37 @@ __fzf-kubectl::kube-workload-selector() {
     )
     local port_fwd_bind=(
         'ctrl-p:execute('
+           '__fzf-kubectl-run-command-in-new-tab'
            '__fzf-kubectl-port-fwd'
-           "$namespace" 
+           "$namespace"
            '{}'
         ')'
     )
+
+           
         
     selector_bind_actions() {
         case "$workload" in
             pod)
-            echo "$accept_bind,$describe_bind,$get_yaml_bind,$tail_bind,$logs_bind,$port_fwd_bind";;
+            echo "$accept_bind,$describe_bind,$get_yaml_bind,$edit_bind,$tail_bind,$logs_bind,$port_fwd_bind";;
             
             deployment)
-            echo "$accept_bind,$describe_bind,$get_yaml_bind,$port_fwd_bind";;
+            echo "$accept_bind,$describe_bind,$get_yaml_bind,$edit_bind,$port_fwd_bind";;
 
             service)
-            echo "$accept_bind,$describe_bind,$get_yaml_bind,$port_fwd_bind";;
+            echo "$accept_bind,$describe_bind,$get_yaml_bind,$edit_bind,$port_fwd_bind";;
 
             configmap)
-            echo "$accept_bind,$describe_bind,$get_yaml_bind";;
+            echo "$accept_bind,$describe_bind,$get_yaml_bind,$edit_bind";;
 
             secret)
-            echo "$accept_bind,$describe_bind,$get_yaml_bind";;
+            echo "$accept_bind,$describe_bind,$get_yaml_bind,$edit_bind";;
 
             clusterrole)
-            echo "$accept_bind,$describe_bind,$get_yaml_bind";;
+            echo "$accept_bind,$describe_bind,$get_yaml_bind,$edit_bind";;
 
             clusterrolebinding)
-            echo "$accept_bind,$describe_bind,$get_yaml_bind";;
+            echo "$accept_bind,$describe_bind,$get_yaml_bind,$edit_bind";;
 
             *)
             echo "Unrecognised workload type $workload"
@@ -167,16 +141,15 @@ __fzf-kubectl::kube-workload-selector() {
         esac
     }
 
-    # The pos selector
-    # Supports several key binding
-    #   * 'ctrl-d' - describes the currently selected pod
-    #   * 'ctrl-t' - tails the logs for the selected pod
-    #   * 'ctrl-l' - opens the logs for the selected pod
-    #   * 'ctrl-p' - starts a port-forward for the selected pod
-    #   * 'enter' - get the resource as yaml
+    # Supports several key binding:
+    #   * 'enter'  - get the resource as yaml
+    #   * 'ctrl-d' - describes the currently selected resource
+    #   * 'ctrl-e' - edit the selected resource
+    #   * 'ctrl-t' - tails the logs for the selected resource
+    #   * 'ctrl-l' - opens the logs for the selected resource
+    #   * 'ctrl-p' - starts a port-forward for the selected resource
     start_selector() {
         local bind=$(selector_bind_actions)
-
         local namespaceOpt
         if [[ "$namespace" == "all" ]]; then
             namespaceOpt="--all-namespaces"
@@ -184,12 +157,11 @@ __fzf-kubectl::kube-workload-selector() {
             namespaceOpt="--namespace=$namespace"
         fi
 
-        echo "bind=$bind"
         kubectl get "$workload" "$namespaceOpt" | \
-            fzf --bind="$bind" \
+            fzf-tmux --bind="$bind" \
                 --header="type: ${workload}s namespace: $namespace" \
                 --header-lines=1 \
-                --query="$pod_query"
+                --query="$query"
     }
 
     start_selector
@@ -197,34 +169,39 @@ __fzf-kubectl::kube-workload-selector() {
 
 ###
 # Parses the options required to find.
-# Parses flags: <cmd> [-n=my-ns|--namespace=my-ns] [pod query]
+# Parses flags: (workload type) [-a|--all-namespaces] [-n=my-ns|--namespace=my-ns] -- [query]
 # 
 ###
-__fzf-kubectl::parse-find-pod-opts() {
-	local namespace pod_query
+__fzf-kubectl::parse-find-workload-opts() {
+    set -- "$@"
+    local all_namespaces_opt namespace_opt
+    zparseopts -D -E \
+        a=all_namespaces_opt \
+        -all-namespaces=all_namespaces_opt \
+        n:=namespace_opt \
+        -namespace:=namespace_opt
 
-	for i in "$@"; do
-		case "$i" in
-    		-n=*|--namespace=*)
-    		namespace="${i#*=}"
-    		shift
-    		;;
+    local namespace
+    if [[ ! -z "$all_namespaces_opt" ]]; then
+        namespace="all"
+    elif [[ ! -z "$namespace_opt" ]]; then
+        namespace=$(echo "${namespace_opt[2]}" | sed -e '/^=/s/^.//')
+    else
+        namespace=""
+    fi
 
-    		-n|--namespace)
+    local workload_query
+    local workload_type_query=()
+    for i in $@[*]; do
+        if [[ "$i" == "--" || "$i" == "-" ]]; then
             shift
-    		namespace="$1"
-    		shift
-    		;;
-    		
-    		-a|--all-namespaces)
-    		namespace="all"
-    		shift
-    		;;
-    		
-    		*) # unknow option
-    		;;
-		esac
-	done
-	pod_query="$@"
-	echo "$namespace|$pod_query"
+            workload_query=$@
+            break
+        else
+            workload_type_query+=($i)
+            shift
+        fi
+    done
+
+    echo "$namespace|$workload_type_query|$workload_query"
 }

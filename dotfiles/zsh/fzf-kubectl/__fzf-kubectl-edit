@@ -1,0 +1,18 @@
+#!/usr/bin/env zsh
+
+NAMESPACE="$1"
+WORKLOAD="$2"
+SELECTED_LINE="$3"
+
+# Define the editor that is used when editing kubernetes resources.
+# Note: For some reason vim done't work well when launched in this context
+export KUBE_EDITOR="subl -w -n"
+
+if [[ "$NAMESPACE" == "all" ]]; then
+	NAMESPACE=$(echo "$SELECTED_LINE" | awk '{ print $1 }')
+	NAME=$(echo "$SELECTED_LINE" | awk '{ print $2 }')
+else 
+	NAME=$(echo "$SELECTED_LINE" | awk '{ print $1 }')
+fi
+
+kubectl --namespace="$NAMESPACE" edit "$WORKLOAD" "$NAME"
