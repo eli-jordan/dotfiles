@@ -34,6 +34,11 @@ kube() {
        | tr ' ' '\n' \
        | fzf -1 -q "$workload_type_query")
 
+    if [[ -z "$workload" ]]; then
+        echo "No workload selected"
+        return 1
+    fi
+
     case "$workload" in
         context)
         kubectx;;
@@ -56,6 +61,10 @@ __fzf-kubectl::kube-workload-selector() {
         local cur_ctx=$(kubectl config current-context)
         local ns=$(kubectl config get-contexts $cur_ctx --no-headers | awk '{ print $5 }')
         namespace="$ns"
+    fi
+
+    if [[ -z "$namespace" ]]; then
+        namespace="default"
     fi
 
     local describe_bind=(

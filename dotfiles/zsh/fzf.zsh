@@ -1,9 +1,16 @@
+red="1"
+yellow="2"
+orange="3"
+blue="4"
+pink="5"
+torquise="6"
+white="7"
+invisible="8"
 
-export FZF_DEFAULT_OPTS='
-    --ansi --height 60% --layout=reverse
-  '   
-
-#--color dark,hl:10,hl+:37,fg+:235,bg+:136,fg+:254
-#--color info:254,prompt:37,spinner:108,pointer:235,marker:235
+export FZF_DEFAULT_OPTS="
+    --height 60% --layout=reverse
+    --color hl:$pink,hl+:$pink,fg+:$white,bg+:10
+    --color info:$torquise,prompt:$yellow,pointer:$red,marker:$red,spinner:$yellow,header:$blue
+"
 
     
