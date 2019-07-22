@@ -21,3 +21,7 @@ zplug "$DOTFILES_ZSH/fzf-kubectl", from:local, use:"__fzf-kubectl*", as:command
 zplug load
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+export GOROOT="/usr/local/opt/go/libexec"
+export PATH="$PATH:$GOPATH/bin"
+

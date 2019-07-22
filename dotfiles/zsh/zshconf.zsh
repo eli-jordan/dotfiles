@@ -8,3 +8,5 @@ setopt share_history
 # Ctrl+K clears the current line
 bindkey '^K' backward-kill-line
 
+
+
