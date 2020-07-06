@@ -18,6 +18,8 @@ DOTFILES_ZSH="$HOME/dotfiles/zsh"
 zplug "$DOTFILES_ZSH", from:local, use:"**/*.zsh"
 zplug "$DOTFILES_ZSH/fzf-kubectl", from:local, use:"__fzf-kubectl*", as:command
 
+zplug "$HOME", from:local, use:".secret-envs.sh"
+
 zplug load
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh

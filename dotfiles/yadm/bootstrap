@@ -23,6 +23,8 @@ homebrew_packages() {
 		zsh
 		zplug
 		vault
+		tldr
+		haskell-stack
 	)
 
 	for p in "${packages[*]}"; do
