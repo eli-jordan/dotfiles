@@ -1,6 +1,5 @@
 alias ll='ls -alh'
-alias zshconfig="subl ~/.zshrc"
 alias k=kubectl
 alias kk=kube
-alias cat=bat
+alias cat='bat --pager=never'
 alias dotfile="subl ~/dotfiles"

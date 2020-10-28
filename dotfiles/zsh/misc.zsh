@@ -15,8 +15,8 @@ export TERM="xterm-256color"
 
 export DEV_ID="tapad-paas-elias"
 
-mf() {
-	local jar=$(ls $HOME/code/mart-framework/platform/cli/target/scala-2.12/cli-assembly-*)
-	java -jar "$jar" $@
-}
+
+export MANPAGER=sh -c 'col -bx | bat -l man -p'
+
+source "$HOME/.sdkman/bin/sdkman-init.sh"
 
