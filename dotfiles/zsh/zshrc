@@ -23,7 +23,7 @@ zplug "wfxr/formarks", as:plugin, defer:1
 
 # Setup scripts and plugins from the local filesystem
 DOTFILES_ZSH="$HOME/dotfiles/zsh"
-zplug "$DOTFILES_ZSH", from:local, use:"**/*.zsh"
+zplug "$DOTFILES_ZSH", from:local, use:"**/*.zsh", defer:3
 zplug "$DOTFILES_ZSH/fzf-kubectl", from:local, use:"__fzf-kubectl*", as:command
 
 zplug "$HOME", from:local, use:".secret-envs.sh"
