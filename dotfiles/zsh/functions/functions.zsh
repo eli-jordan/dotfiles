@@ -24,8 +24,13 @@ aws_auth() {
 	export AWS_SECRET_ACCESS_KEY="$(echo $credentialJson | jq -cMr .Credentials.SecretAccessKey)"
 	export AWS_SESSION_TOKEN="$(echo $credentialJson | jq -cMr .Credentials.SessionToken)"
 
-	python3 ./save_aws_credentials.py
+	python3 $HOME/dotfiles/zsh/functions/save_aws_credentials.py
 
 	echo "Autentication details haved been saved in a profile named 'mfa'."
 	echo "You can now use 'aws --profile=mfa ...'"
+}
+
+ssl_dates() {
+	local host="$1"
+	openssl s_client -connect "$1":443 -servername "$1" 2> /dev/null | openssl x509 -noout -dates
 }
