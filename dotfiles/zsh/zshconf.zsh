@@ -1,5 +1,4 @@
 
-export KUBE_EDITOR="subl -w -n"
 
 # Use the same history buffer in all sessions
 setopt inc_append_history

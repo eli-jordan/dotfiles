@@ -8,9 +8,6 @@ export TERM="xterm-256color"
 
 export DEV_ID="tapad-paas-elias"
 
-
-export MANPAGER=sh -c 'col -bx | bat -l man -p'
-
 source "$HOME/.sdkman/bin/sdkman-init.sh"
 
 
@@ -20,4 +17,9 @@ test -d "${GOPATH}" || mkdir "${GOPATH}"
 test -d "${GOPATH}/src/github.com" || mkdir -p "${GOPATH}/src/github.com"
 
 export PATH="$PATH:/Applications/Xcode.app/Contents/Developer/usr/bin" 
+
+
+
+#export MANPAGER=sh -c 'col -bx | bat -l man -p'
+export KUBE_EDITOR="subl -w -n"
 

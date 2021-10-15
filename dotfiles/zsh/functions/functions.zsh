@@ -34,3 +34,17 @@ ssl_dates() {
 	local host="$1"
 	openssl s_client -connect "$1":443 -servername "$1" 2> /dev/null | openssl x509 -noout -dates
 }
+
+codecov_report() {
+	if [[ -z "$CODECOV_TOKEN" ]]; then
+		echo "error: CODECOV_TOKEN environment variable must be set"
+	fi
+
+	local repos=(dgx dga compass dcs batch-data-ingress warehouse devicegraph-5 standalone-activation pixel-server composer-dsl cloudcre10)
+
+	echo "repo,coverage"
+	for r in $repos; do
+  		coverage="$(curl -s -X GET https://codecov.io/api/gh/Tapad/$r -H "Authorization: ${CODECOV_TOKEN}" | jq -r '.commit.totals.c')"
+  		echo "Tapad/$r,$coverage"
+	done
+}
